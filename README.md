@@ -1,5 +1,7 @@
 # Real-Time Exercise Rep Counter — Jetson Nano
 
+A fully offline, real-time exercise repetition counter running on a **Jetson Nano 4GB** using only a camera. No cloud, no training, no wearables.
+
 ---
 
 ## 📊 Preliminary Project Results
@@ -26,6 +28,7 @@ angle   = degrees(arccos(clip(cos_val, -1.0, 1.0)))
 ```
 
 ### 4. 🎯 Predictions
+
 | Exercise | Landmarks (A → Joint → C) | Up | Down |
 |----------|--------------------------|-----|------|
 | Bicep Curl | Shoulder → Elbow → Wrist | 160° | 40° |
@@ -33,6 +36,7 @@ angle   = degrees(arccos(clip(cos_val, -1.0, 1.0)))
 | Shoulder Press | Elbow → Shoulder → Hip | 160° | 70° |
 
 ### 5. ⚡ Speed
+
 | Metric | Value |
 |--------|-------|
 | FPS | ~10–15 (CPU only) |
@@ -40,6 +44,7 @@ angle   = degrees(arccos(clip(cos_val, -1.0, 1.0)))
 | RAM | ~900 MB – 1.2 GB |
 
 ### 6. 📏 Metrics Used
+
 | Metric | Value |
 |--------|-------|
 | Rep Count Accuracy | ~92–95% |
@@ -48,65 +53,89 @@ angle   = degrees(arccos(clip(cos_val, -1.0, 1.0)))
 | Reset Gesture Accuracy | ~90% |
 | Calorie Estimation Error | ~10–15% vs MET tables |
 
-
-
-
-A fully offline, real-time exercise repetition counter running on a **Jetson Nano 4GB** using only a camera. No cloud, no training, no wearables.
+---
 
 ## How it works
 
-1. Camera captures a live frame
-2. **MediaPipe Pose** (pre-trained) detects 33 body landmarks
-3. Joint angles are computed from 3 landmark coordinates
-4. A state machine counts reps: `extended → contracted = 1 rep`
-5. Live overlay displays rep count, angle, and feedback
+1. Enter your name at startup for a personalized session
+2. Camera captures a live frame
+3. **MediaPipe Pose** (pre-trained) detects 33 body landmarks
+4. Joint angles are computed from 3 landmark coordinates
+5. A state machine counts reps: `extended → contracted = 1 rep`
+6. Live overlay displays rep count, sets, calories, angle, and motivation
+7. Meme images appear at milestone reps (8, 12, 15) for motivation
+8. Touch your face to save the current set and reset rep count
+
+---
 
 ## Supported exercises
 
-| Exercise    | Joint tracked        |
-|-------------|----------------------|
-| Bicep Curl  | Shoulder → Elbow → Wrist |
-| Push Up     | Shoulder → Elbow → Wrist |
-| Squat       | Hip → Knee → Ankle   |
+| Exercise | Joint tracked |
+|----------|--------------|
+| Bicep Curl | Shoulder → Elbow → Wrist |
+| Squat | Hip → Knee → Ankle |
+| Shoulder Press | Elbow → Shoulder → Hip |
+
+---
 
 ## Project structure
 
 ```
 rep_counter/
-├── main.py           # Entry point — camera loop
+├── main.py           # Entry point — menu + camera loop
 ├── pose_detector.py  # MediaPipe Pose wrapper + angle math
-├── rep_counter.py    # State machine (up/down → rep count)
-├── overlay.py        # OpenCV UI overlay on frame
-├── config.py         # Exercise definitions + thresholds
+├── rep_counter.py    # Launcher shortcut
+├── overlay.py        # OpenCV UI — side panel, bars, meme display
+├── config.py         # Exercise definitions + thresholds + colors
 └── requirements.txt
 ```
+
+---
 
 ## Setup on Jetson Nano
 
 ```bash
-pip3 install opencv-python mediapipe numpy
+sudo apt install python3-pip python3-opencv -y
+pip3 install mediapipe==0.10.9 numpy
 ```
 
-> For JetPack 4.x use the community MediaPipe build:
-> https://github.com/PINTO0309/mediapipe-bin
+> Tested on Ubuntu 20.04.6 LTS, Python 3.8.10, MediaPipe 0.10.9
+
+---
 
 ## Run
 
 ```bash
-cd rep_counter
 python3 main.py
 ```
 
+---
+
 ## Controls
 
-| Key | Action            |
-|-----|-------------------|
-| `Q` | Quit              |
-| `R` | Reset rep count   |
-| `E` | Switch exercise   |
+| Action | How |
+|--------|-----|
+| Select exercise | Type 1, 2, or 3 in terminal |
+| Count a rep | Perform full range of motion |
+| Save set & reset reps | Touch your face (wrist near nose) |
+| Quit to menu | Press `Q` in camera window |
+
+---
+
+## Features
+
+- Personalized username input on startup
+- Live HUD — reps, sets, calories, joint angle, stage
+- Progress bar toward next rep goal (8 → 12 → 15 → 20)
+- Motivational messages at milestone reps
+- Meme image overlay replacing side panel at milestones
+- Calorie burn estimation per rep (MET-based)
+- Session summary printed on exit
+
+---
 
 ## Hardware
 
-- Jetson Nano 4GB (JetPack 4.6)
-- USB webcam or Raspberry Pi Camera v2 (CSI)
-- 720p recommended for best FPS
+- Jetson Nano 4GB (JetPack / Ubuntu 20.04)
+- USB webcam at `/dev/video0`
+- 640×480 recommended for best FPS
