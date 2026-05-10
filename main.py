@@ -102,7 +102,7 @@ def run_counter(ex, memes):
                 reset_cooldown = now + 3
                 if memes:
                     meme_img   = memes[meme_index % len(memes)]
-                    meme_end   = now + 4
+                    meme_end   = now + 2
                     meme_index += 1
                 print(f"  Set {sets} saved. Reps reset.")
 
