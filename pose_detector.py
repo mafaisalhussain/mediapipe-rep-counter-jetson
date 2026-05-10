@@ -1,47 +1,31 @@
-import cv2
-import mediapipe as mp
 import numpy as np
+import mediapipe as mp
 
-class PoseDetector:
-    def __init__(self, detection_conf=0.7, tracking_conf=0.7):
-        self.mp_pose = mp.solutions.pose
-        self.mp_draw = mp.solutions.drawing_utils
-        self.mp_drawing_styles = mp.solutions.drawing_styles
-        self.pose = self.mp_pose.Pose(
-            min_detection_confidence=detection_conf,
-            min_tracking_confidence=tracking_conf
-        )
-        self.results = None
+mp_pose = mp.solutions.pose
 
-    def find_pose(self, frame, draw=True):
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        rgb.flags.writeable = False
-        self.results = self.pose.process(rgb)
-        rgb.flags.writeable = True
+def calc_angle(a, b, c):
+    a, b, c = np.array(a), np.array(b), np.array(c)
+    cos_val = np.dot(a - b, c - b) / (
+        np.linalg.norm(a - b) * np.linalg.norm(c - b) + 1e-6
+    )
+    return np.degrees(np.arccos(np.clip(cos_val, -1.0, 1.0)))
 
-        if self.results.pose_landmarks and draw:
-            self.mp_draw.draw_landmarks(
-                frame,
-                self.results.pose_landmarks,
-                self.mp_pose.POSE_CONNECTIONS,
-                landmark_drawing_spec=self.mp_drawing_styles.get_default_pose_landmarks_style()
-            )
-        return frame
+def detect_touch_face(lms, w, h):
+    try:
+        nose = np.array([lms[mp_pose.PoseLandmark.NOSE.value].x * w,
+                         lms[mp_pose.PoseLandmark.NOSE.value].y * h])
+        lw   = np.array([lms[mp_pose.PoseLandmark.LEFT_WRIST.value].x * w,
+                         lms[mp_pose.PoseLandmark.LEFT_WRIST.value].y * h])
+        rw   = np.array([lms[mp_pose.PoseLandmark.RIGHT_WRIST.value].x * w,
+                         lms[mp_pose.PoseLandmark.RIGHT_WRIST.value].y * h])
+        thr = w * 0.15
+        return (np.linalg.norm(lw - nose) < thr or
+                np.linalg.norm(rw - nose) < thr)
+    except:
+        return False
 
-    def get_landmark(self, frame, idx):
-        h, w = frame.shape[:2]
-        lm = self.results.pose_landmarks.landmark[idx]
-        return int(lm.x * w), int(lm.y * h)
-
-    def compute_angle(self, a, b, c):
-        a = np.array(a, dtype=float)
-        b = np.array(b, dtype=float)
-        c = np.array(c, dtype=float)
-        ba = a - b
-        bc = c - b
-        norm = np.linalg.norm(ba) * np.linalg.norm(bc)
-        if norm == 0:
-            return 0.0
-        cos_angle = np.dot(ba, bc) / norm
-        cos_angle = np.clip(cos_angle, -1.0, 1.0)
-        return float(np.degrees(np.arccos(cos_angle)))
+def get_landmarks(lms, lm_ids, cam_w, cam_h):
+    a = [lms[lm_ids[0].value].x * cam_w, lms[lm_ids[0].value].y * cam_h]
+    b = [lms[lm_ids[1].value].x * cam_w, lms[lm_ids[1].value].y * cam_h]
+    c = [lms[lm_ids[2].value].x * cam_w, lms[lm_ids[2].value].y * cam_h]
+    return a, b, c
