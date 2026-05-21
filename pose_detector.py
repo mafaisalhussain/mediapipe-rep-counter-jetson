@@ -1,31 +1,22 @@
 import numpy as np
-import mediapipe as mp
-
-mp_pose = mp.solutions.pose
 
 def calc_angle(a, b, c):
     a, b, c = np.array(a), np.array(b), np.array(c)
-    cos_val = np.dot(a - b, c - b) / (
-        np.linalg.norm(a - b) * np.linalg.norm(c - b) + 1e-6
-    )
-    return np.degrees(np.arccos(np.clip(cos_val, -1.0, 1.0)))
+    ba = a - b
+    bc = c - b
+    cos_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc) + 1e-6)
+    return float(np.degrees(np.arccos(np.clip(cos_angle, -1.0, 1.0))))
+
+def get_landmarks(lms, lm_ids, w, h):
+    def pt(lm_id):
+        lm = lms[lm_id]
+        return [lm.x * w, lm.y * h]
+    return pt(lm_ids[0]), pt(lm_ids[1]), pt(lm_ids[2])
 
 def detect_touch_face(lms, w, h):
-    try:
-        nose = np.array([lms[mp_pose.PoseLandmark.NOSE.value].x * w,
-                         lms[mp_pose.PoseLandmark.NOSE.value].y * h])
-        lw   = np.array([lms[mp_pose.PoseLandmark.LEFT_WRIST.value].x * w,
-                         lms[mp_pose.PoseLandmark.LEFT_WRIST.value].y * h])
-        rw   = np.array([lms[mp_pose.PoseLandmark.RIGHT_WRIST.value].x * w,
-                         lms[mp_pose.PoseLandmark.RIGHT_WRIST.value].y * h])
-        thr = w * 0.15
-        return (np.linalg.norm(lw - nose) < thr or
-                np.linalg.norm(rw - nose) < thr)
-    except:
-        return False
-
-def get_landmarks(lms, lm_ids, cam_w, cam_h):
-    a = [lms[lm_ids[0].value].x * cam_w, lms[lm_ids[0].value].y * cam_h]
-    b = [lms[lm_ids[1].value].x * cam_w, lms[lm_ids[1].value].y * cam_h]
-    c = [lms[lm_ids[2].value].x * cam_w, lms[lm_ids[2].value].y * cam_h]
-    return a, b, c
+    import mediapipe as mp
+    _lm = mp.solutions.pose.PoseLandmark
+    nose  = lms[_lm.NOSE]
+    wrist = lms[_lm.LEFT_WRIST]
+    dist  = ((wrist.x - nose.x) * w) ** 2 + ((wrist.y - nose.y) * h) ** 2
+    return dist ** 0.5 < 80

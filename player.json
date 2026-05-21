@@ -1,0 +1,22 @@
+{
+  "name": "mafh",
+  "total_xp": 466,
+  "total_reps": 244,
+  "total_sessions": 43,
+  "streak": 1,
+  "last_session": "2026-05-18",
+  "bests": {
+    "Bicep Curl": {
+      "reps": 13,
+      "date": "2026-05-18"
+    },
+    "Squat": {
+      "reps": 27,
+      "date": "2026-05-18"
+    },
+    "Shoulder Press": {
+      "reps": 0,
+      "date": ""
+    }
+  }
+}

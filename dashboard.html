@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="30">
+<title>Rep Counter — Dashboard</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh;padding:24px 16px;}
+  .wrap{max-width:720px;margin:0 auto;}
+
+  /* header */
+  .header{display:flex;align-items:center;gap:14px;margin-bottom:24px;}
+  .avatar{width:52px;height:52px;border-radius:50%;background:#1e40af;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#93c5fd;flex-shrink:0;}
+  .header-info h1{font-size:18px;font-weight:600;color:#f1f5f9;}
+  .header-info p{font-size:13px;color:#64748b;margin-top:2px;}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:99px;margin-right:6px;}
+  .badge-silver{background:#1e293b;color:#94a3b8;border:1px solid #334155;}
+  .badge-gold{background:#292000;color:#fbbf24;border:1px solid #854f0b;}
+  .badge-bronze{background:#1c1008;color:#d97706;border:1px solid #633806;}
+  .badge-iron{background:#1a1a1a;color:#6b7280;border:1px solid #374151;}
+  .badge-rookie{background:#1e1e2e;color:#818cf8;border:1px solid #3730a3;}
+
+  /* stat grid */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+  .stat-card{background:#1a1f2e;border:1px solid #1e293b;border-radius:10px;padding:14px 12px;}
+  .stat-card .label{font-size:11px;color:#475569;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+  .stat-card .value{font-size:22px;font-weight:600;color:#f1f5f9;}
+  .stat-card .icon{font-size:16px;margin-right:4px;}
+
+  /* section card */
+  .card{background:#141824;border:1px solid #1e293b;border-radius:12px;padding:18px 20px;margin-bottom:14px;}
+  .card-title{font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;}
+
+  /* XP bar */
+  .xp-row{display:flex;justify-content:space-between;font-size:12px;color:#475569;margin-bottom:6px;}
+  .xp-track{background:#1e293b;border-radius:99px;height:8px;overflow:hidden;}
+  .xp-fill{height:8px;border-radius:99px;background:#6366f1;transition:width .4s;}
+  .level-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+  .lv-pill{font-size:11px;padding:3px 10px;border-radius:99px;border:1px solid #1e293b;color:#475569;}
+  .lv-pill.active{border-color:#6366f1;color:#a5b4fc;background:#1e1b4b;}
+
+  /* streak calendar */
+  .cal-grid{display:flex;flex-wrap:wrap;gap:5px;}
+  .day{width:20px;height:20px;border-radius:4px;position:relative;}
+  .day.done{background:#166534;}
+  .day.miss{background:#1e293b;}
+  .day.today{outline:2px solid #6366f1;outline-offset:1px;}
+  .cal-legend{display:flex;gap:14px;margin-top:10px;font-size:11px;color:#475569;}
+  .cal-legend span{display:flex;align-items:center;gap:5px;}
+  .dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+  /* personal bests */
+  .pb-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .pb-table td{padding:8px 0;border-bottom:1px solid #1e293b;color:#94a3b8;}
+  .pb-table tr:last-child td{border-bottom:none;}
+  .pb-table .ex{color:#e2e8f0;}
+  .pb-table .num{text-align:right;font-weight:600;color:#f1f5f9;}
+  .pb-table .dt{text-align:right;color:#475569;font-size:11px;padding-left:12px;}
+
+  /* sessions */
+  .sess-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .sess-table td{padding:8px 0;border-bottom:1px solid #1e293b;}
+  .sess-table tr:last-child td{border-bottom:none;}
+  .sess-table .when{color:#475569;white-space:nowrap;}
+  .sess-table .ex{color:#e2e8f0;padding-left:10px;}
+  .sess-table .detail{text-align:right;color:#475569;}
+  .sess-table .xp{text-align:right;color:#4ade80;font-weight:600;padding-left:12px;}
+
+  /* tempo badge */
+  .tempo-fast{color:#f87171;}
+  .tempo-steady{color:#4ade80;}
+  .tempo-slow{color:#fbbf24;}
+
+  /* refresh hint */
+  .hint{text-align:center;font-size:11px;color:#334155;margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="avatar" id="av">?</div>
+    <div class="header-info">
+      <h1 id="pname">Loading…</h1>
+      <p id="psub"></p>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="label">🔥 Streak</div><div class="value" id="streak">—</div></div>
+    <div class="stat-card"><div class="label">💪 Total reps</div><div class="value" id="tot-reps">—</div></div>
+    <div class="stat-card"><div class="label">⚡ Total XP</div><div class="value" id="tot-xp">—</div></div>
+    <div class="stat-card"><div class="label">📅 Sessions</div><div class="value" id="tot-sess">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Level progress</div>
+    <div class="xp-row"><span id="xp-cur">0 XP</span><span id="xp-next"></span></div>
+    <div class="xp-track"><div class="xp-fill" id="xp-bar" style="width:0%"></div></div>
+    <div class="level-row" id="level-pills"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">30-day activity</div>
+    <div class="cal-grid" id="cal"></div>
+    <div class="cal-legend">
+      <span><span class="dot" style="background:#166534"></span>Workout</span>
+      <span><span class="dot" style="background:#1e293b"></span>Rest</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Personal bests</div>
+    <table class="pb-table" id="pb-table">
+      <tr><td colspan="3" style="color:#334155">No data yet</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Recent sessions</div>
+    <table class="sess-table" id="sess-table">
+      <tr><td colspan="4" style="color:#334155">No sessions yet</td></tr>
+    </table>
+  </div>
+
+  <div class="hint">Auto-refreshes every 30 s &nbsp;·&nbsp; press D in the workout window to open</div>
+</div>
+
+<script>
+const DATA = __PLAYER_DATA__;
+const SESSIONS = __SESSION_DATA__;
+const LEVELS = ["Rookie","Iron","Bronze","Silver","Gold"];
+const LEVEL_XP = [0, 200, 500, 1000, 1500];
+const BADGE_CLASS = {Rookie:"rookie",Iron:"iron",Bronze:"bronze",Silver:"silver",Gold:"gold"};
+
+function initials(name){ return name.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2)||"?"; }
+
+function getLevel(xp){
+  let idx=0;
+  for(let i=0;i<LEVEL_XP.length;i++) if(xp>=LEVEL_XP[i]) idx=i;
+  return idx;
+}
+
+function render(){
+  const p = DATA;
+  const name = p.name || "Athlete";
+  document.getElementById("av").textContent = initials(name);
+  document.getElementById("pname").textContent = name;
+
+  const lvIdx = getLevel(p.total_xp||0);
+  const lvName = LEVELS[lvIdx];
+  const bc = BADGE_CLASS[lvName]||"rookie";
+  document.getElementById("psub").innerHTML =
+    `<span class="badge badge-${bc}">${lvName}</span>Level ${lvIdx+1} &nbsp;·&nbsp; ${p.total_xp||0} XP total`;
+
+  document.getElementById("streak").textContent   = (p.streak||0) + " d";
+  document.getElementById("tot-reps").textContent = (p.total_reps||0).toLocaleString();
+  document.getElementById("tot-xp").textContent   = (p.total_xp||0).toLocaleString();
+  document.getElementById("tot-sess").textContent = (p.total_sessions||0);
+
+  // XP bar
+  const curMin = LEVEL_XP[lvIdx];
+  const nextMin = LEVEL_XP[lvIdx+1] || LEVEL_XP[lvIdx]+500;
+  const pct = lvIdx===LEVELS.length-1 ? 100 : Math.round(((p.total_xp-curMin)/(nextMin-curMin))*100);
+  document.getElementById("xp-cur").textContent = (p.total_xp||0)+" XP";
+  document.getElementById("xp-next").textContent = lvIdx<LEVELS.length-1
+    ? `${nextMin} XP to ${LEVELS[lvIdx+1]}` : "Max level!";
+  document.getElementById("xp-bar").style.width = pct+"%";
+
+  // level pills
+  const pills = document.getElementById("level-pills");
+  pills.innerHTML = LEVELS.map((lv,i)=>
+    `<span class="lv-pill${i===lvIdx?' active':''}">${lv}</span>`
+  ).join("");
+
+  // 30-day calendar
+  const cal = document.getElementById("cal");
+  const today = new Date();
+  const sessionDates = new Set(SESSIONS.map(s=>s.date));
+  cal.innerHTML = "";
+  for(let i=29;i>=0;i--){
+    const d = new Date(today); d.setDate(today.getDate()-i);
+    const ds = d.toISOString().slice(0,10);
+    const isToday = i===0;
+    const done = sessionDates.has(ds);
+    const el = document.createElement("div");
+    el.className = "day"+(done?" done":" miss")+(isToday?" today":"");
+    el.title = ds;
+    cal.appendChild(el);
+  }
+
+  // personal bests
+  const bests = p.bests||{};
+  const pbTbl = document.getElementById("pb-table");
+  const pbRows = Object.entries(bests).filter(([,v])=>v.reps>0);
+  if(pbRows.length===0){
+    pbTbl.innerHTML = `<tr><td colspan="3" style="color:#334155">No data yet</td></tr>`;
+  } else {
+    pbTbl.innerHTML = pbRows.map(([ex,v])=>
+      `<tr><td class="ex">${ex}</td><td class="num">${v.reps} reps</td><td class="dt">${v.date}</td></tr>`
+    ).join("");
+  }
+
+  // recent sessions
+  const sessTbl = document.getElementById("sess-table");
+  if(SESSIONS.length===0){
+    sessTbl.innerHTML = `<tr><td colspan="4" style="color:#334155">No sessions yet</td></tr>`;
+  } else {
+    sessTbl.innerHTML = SESSIONS.slice(0,8).map(s=>{
+      const totalReps = (s.sets||[]).reduce((a,b)=>a+(b.reps||0),0);
+      const setsCount = (s.sets||[]).length;
+      const tempo = s.tempo&&s.tempo.avg_pace_sec
+        ? `<span class="tempo-${s.tempo.label||'steady'}">${s.tempo.avg_pace_sec}s/rep</span>` : "";
+      return `<tr>
+        <td class="when">${s.date} ${s.time||""}</td>
+        <td class="ex">${s.exercise}</td>
+        <td class="detail">${setsCount} sets · ${totalReps} reps ${tempo}</td>
+        <td class="xp">+${s.total_xp||0} XP</td>
+      </tr>`;
+    }).join("");
+  }
+}
+
+render();
+</script>
+</body>
+</html>
